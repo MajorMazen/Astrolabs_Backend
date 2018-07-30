@@ -1,4 +1,4 @@
-//will automatically be created on mlab mongoose
+//table will automatically be created on mlab mongoose
 //follow the file naming convention
 //next is create a registration page
 //create that in separate files, so the routes can get like /user/register/.... with each standing for a separate page

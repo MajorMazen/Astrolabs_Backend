@@ -1,23 +1,31 @@
-//this is a new route
+//this to create new routes
+// (1) include packages
 const express = require("express");
 //use a router which is a function in express
 const router = express.Router();
-//include for password decryption
+//include for password encryption
 const bcrypt = require("bcryptjs");
+// include the User model to use and instantiate users
 const User = require("../models/User");
 const bodyParser = require("body-parser");
+// include for fetching personal profile pics
 const gravatar = require("gravatar");
-//include those for tokens
+//include those for hashing tokens in arguemnt: secret
 const keys = require("../config/keys");
+// include to protect your private route from being accessed through sending and validating tokens
 const passport = require("passport");
+// more convenient than cookies for separate front and back-end layers
+// sends you a webtoken (key), which is valid for some time after signing in correctly
 const jwt = require("jsonwebtoken");
 
-//defining a new route (/test request)
+// (2) defining a new route (/test request)
+// test on http://localhost:5000/<theStringYouDefineInServer.js>/test
 router.get("/test", (req, res) => res.json({ msg: "users work" }));
 
-//now create a registration route, would be a post request
+// (3) now create a registration route, would be a post request with name, email & password
 //check if user already exists (read through the models/User folder if already registered)
 //the req.body can be tested through postman caus there's no frontend
+//post is an express fn, with a callback fn(req, res) as input
 router.post("/register", (req, res) => {
   User.findOne({ email: req.body.email }).then(outcomeuser => {
     if (outcomeuser) {
@@ -38,31 +46,32 @@ router.post("/register", (req, res) => {
         avatar: avatar
       });
 
-      //encryption
+      //password encryption
       bcrypt.genSalt(10, (err, salt) => {
+        //function body, arguemnts are (err & salt) which are also retrieved after genSalt's finished
         bcrypt.hash(newUser.password, salt, (err, hash) => {
           if (err) throw err;
           newUser.password = hash;
           newUser
-            .save()
-            .then(user => res.json(user))
-            .catch(err => console.log(err));
+            .save() //attempt saving anyway
+            .then(user => res.json(user)) //after that if successful...
+            .catch(err => console.log(err)); //if not....
         });
       });
     }
-    //now test this on postman (download it)
-    //put the url "localhost:5000/users/register" and choose post
-    //put the data in the body x-www-form section and hit send
   });
 });
 
-//create a login request
+// (4) now test this on postman (download it)
+//put http://localhost:5000/<theStringYouDefineInServer.js>/test
+//choose post and put the data in the body x-www-form section and hit send
+
+// (5) create a login request (with email and password)
 router.post("/login", (req, res) => {
-  //defining them as variables to make life easier
   const email = req.body.email;
   const password = req.body.password;
 
-  //validate the keys
+  //optional: validate input keys (key-value pairs) or identifiers to avoid crashing the server
   if (!email || !password) {
     return res.status(400).json({ message: "Invalid email and password" });
   }
@@ -75,10 +84,11 @@ router.post("/login", (req, res) => {
       bcrypt.compare(password, user.password).then(isMatch => {
         if (isMatch) {
           //log them in
-          //passport package protects your private route from being accessed, it's personalised and expires, decoupled from application
+          //passport package protects your private route from being accessed, the token is personalised and expires, decoupled from application
           //tokens also can have data stored in them too (like retaining user name without constantly consulting the db)
           //can use cookies to store user data, cookies are browser based, we are decoupled, use webtokens instead
 
+          // will use later
           const payload = { id: user.id, name: user.name };
           //tokens are also secured, are hashed through salt which i secretly define in keys.js
           // Sign Token

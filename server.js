@@ -1,31 +1,35 @@
-//include the packages
+// (1) npm install express mongoose body-parser bcryptjs jsonwebtokenpassport passport-jwt gravatar
+// (2) include the packages
 const express = require("express");
 const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
-//for after creating the user.js in routes
+// (11) for after creating the user.js in routes
 const users = require("./routes/users");
+// (13) Allowing private routes (users should be logged in with a valid token to view)
 const passport = require("passport");
 
-//start the server with this variable
+// (3) start the server with this variable
 const app = express();
 
-//body-parser middleware
+// (5) Enable json send and receive/read in server
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
-//allowing private routes
+// (13) Allowing private routes (users should be logged in with valid tokens to view)
+// create a file ./config/passport.js, paste contents and link it
 app.use(passport.initialize());
 // Passport Config
 require("./config/passport")(passport);
 
-//look for port online otherwise on port 5000
+// (4) look for port online otherwise on port 5000
 const port = process.env.port || 5000;
 app.listen(port, () => console.log(`Server running on port ${port}`));
 
-//connection string saved inside the created config/keys.js
+// (8) connect to already existing mlab db we called astrolabs.
+// create config/keys_dev.js and save the connection string in it.
 const db = require("./config/keys").mongoURI;
 
-// Connect to MongoDB
+// (9) Connect to MongoDB
 mongoose
   .connect(
     db,
@@ -34,25 +38,43 @@ mongoose
   .then(() => console.log("MongoDB Connected"))
   .catch(err => console.log(err));
 
-//4 api requests(get,post,delete,..)
-app.get("/", (req, res) => res.json({ msg: "hello" }));
-//also including other routes from users files
-// '/users'  can be any string you define
+// (10) create a schema (new table) for the db in ./models/User.js
+// which mongoose will automatically recognize and process
 
+// (5) create api. there are 4 api requests(get,post,delete,..)
 //now type in chrome: http://localhost:5000/ to see hello json
+app.get("/", (req, res) => res.json({ msg: "hello" }));
 
-//run your nodemon to auto-refresh the server
-//uing global var installation: npm install nodemon -g
-//now a global variable, run: nodemon server.js
+// (6) install your nodemon to auto-refresh the server: npm install nodemon -g
+// (7) now a global variable, run: 'nodemon server.js' to see changes by just refreshing chrome
 
-//create schema for the db in models file
+// (11) create routes inside ./routes/users.js
+// '/users'  can be any string you define, which will be tailed by the links created inside the file users.js
+// test this on http://localhost:5000/users/test
+app.use("/users", users);
 
-app.use("/users", users); //test this http://localhost:5000/users/test (bec /test is created in the /users file)
-//trying out a private route, that you only see if logged in (send u have to be logged in to view)
-//if u're logged on, u will see the token in the header if your get or post request
-//try typing localhost:5000//dashboard and enter a token from a logged in user in 'Header' and key:Authorization
+// (12) go to Postman and test additional routes defined in users.js
+
+// (13) Allowing private routes (users should be logged in with a valid token to view)
+//if u're logged on, u will see a valid token in the header in your get or post request
+// in Postman, enter the link http://localhost:5000/dashboard and enter the token value from a logged in user in
+// Header -> Key: Authorization
 app.get(
   "/dashboard",
   passport.authenticate("jwt", { session: false }),
   (req, res) => res.json({ msg: "This is the private dashboard" })
-);
+); //else will send unauthorized
+
+// (14) also remove some files from being uploaded to git in .gitignore
+// (15) press git init, add, commit, push
+// cd filename
+// git init
+// git add .
+// git status
+// git commit -m "the complete project"
+// git remote add origin https://github.com/MajorMazen/Astrolabs_Backend.git
+// git push -u origin master
+
+// (16) create on heroku a project named Astrolabs_Backend
+// push to heroku through: heroku git:remote -a Astrolabs_Backend
+// and try on postman with its new link heroku/projectname
